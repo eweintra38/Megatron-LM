@@ -6,7 +6,7 @@ set -ex
 
 # Distributed training variables
 LAUNCHER_TYPE=${HL_LAUNCHER_TYPE:-mpirun}
-DATA_DIR=${HL_DATA_DIR_ROOT:-/data/datasets/red_pajama}
+DATA_DIR=${HL_DATA_DIR_ROOT:-/mnt/weka/algo/red_pajama}
 DATA_CACHE_DIR=${HL_DATA_CACHE_DIR:-/software/data/dataset_idx/red_pajama}
 DATA_FILE_PREFIX=${HL_DATA_FILE_PREFIX:-redpajama}
 TOKENIZER_MODEL=${HL_TOKENIZER_MODEL:-/software/data/datasets/red_pajama/tokenizer.model}
@@ -19,7 +19,7 @@ PP=${HL_PP:-1}
 CP=${HL_CP:-1}
 MICRO_BATCH_SIZE=${HL_MICRO_BATCH:-1} # batch_size
 EXIT_INTERVAL=${HL_EXIT_INTERVAL:-0}
-OUTPUT_DIR=${HL_RESULTS_DIR:-out}
+OUTPUT_DIR=${HL_RESULTS_DIR:-/root/Megatron-LM/out}
 OUTPUT_DIR_PREFIX=${HL_RESULTS_DIR_PREFIX:-.}
 CHECKPOINT_SAVE=${HL_SAVE:-1}
 SAVE_INTERVAL=${HL_SAVE_INTERVAL:-2000}
