@@ -129,12 +129,19 @@ if [[ "${LLAMA_VER}" = "1" ]]; then
         exit 1
     fi
 elif [[ "${LLAMA_VER}" = "2" ]]; then
+    # TOKENIZER_TYPE=${HL_TOKENIZER_TYPE:-GPTSentencePieceTokenizer}
+    # GLOBAL_BATCH_SIZE=${HL_GBS:-1024} # microbatches in the pipeline (computed as `GLOBAL_BATCH / (DP * MICRO_BATCH)`) should be divisible by the PP
+    # MAX_SEQ_LEN=${HL_SEQ_LEN:-4096}
+    # TRAIN_ITERS=${HL_TRAIN_ITERS:-500000}
+    # ADAM_EPS=1e-8
+    # LR_WARMUP_ITERS=2000
+    # ROTARY_BASE=10000
     TOKENIZER_TYPE=${HL_TOKENIZER_TYPE:-GPTSentencePieceTokenizer}
-    GLOBAL_BATCH_SIZE=${HL_GBS:-1024} # microbatches in the pipeline (computed as `GLOBAL_BATCH / (DP * MICRO_BATCH)`) should be divisible by the PP
-    MAX_SEQ_LEN=${HL_SEQ_LEN:-4096}
-    TRAIN_ITERS=${HL_TRAIN_ITERS:-500000}
+    GLOBAL_BATCH_SIZE=${HL_GBS:-128} # microbatches in the pipeline (computed as `GLOBAL_BATCH / (DP * MICRO_BATCH)`) should be divisible by the PP
+    MAX_SEQ_LEN=${HL_SEQ_LEN:-512}
+    TRAIN_ITERS=${HL_TRAIN_ITERS:-1000}
     ADAM_EPS=1e-8
-    LR_WARMUP_ITERS=2000
+    LR_WARMUP_ITERS=100
     ROTARY_BASE=10000
     if [[ "${LLAMA_MODEL_SIZE}" = "7" ]]; then
         # HIDDEN_SIZE=${HL_HIDDEN_SIZE:-4096}
