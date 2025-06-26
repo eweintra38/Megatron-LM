@@ -12,7 +12,7 @@ except:
 import os
 import torch
 # EW: override torch.distributed. add random packet loss
-import simulated_allreduce  # Automatically patches torch.distributed.all_reduce
+import megatron.utils.simulated_allreduce  # override all_reduce with packet-loss simulation
 
 from functools import partial
 from contextlib import nullcontext

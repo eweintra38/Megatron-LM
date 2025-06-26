@@ -23,6 +23,11 @@ _last_good_shard_ag = {}
 SIMULATE_GRADIENT_SYNC_ONLY = os.getenv("SIMULATE_GRADIENT_SYNC_ONLY", "1") == "1"
 
 def simulated_all_reduce(tensor, op=dist.ReduceOp.SUM, group=None, async_op=False):
+
+    if not hasattr(simulated_all_reduce, "_warned"):
+        logger.info(f"[RANK {_rank}] Using simulated_all_reduce override")
+        simulated_all_reduce._warned = True
+
     if group != mpu.get_data_parallel_group():
         return _original_all_reduce(tensor, op=op, group=group, async_op=async_op)
 
