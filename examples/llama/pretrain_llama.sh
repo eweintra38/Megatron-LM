@@ -4,6 +4,10 @@
 
 set -ex
 
+# EW: probabilities for random drops during collectives
+SIMULATE_GRADIENT_SYNC_ONLY=${EW_SIMULATE_GRADIENT_SYNC_ONLY:-1}
+PACKET_LOSS_PROB_RS=${EW_PACKET_LOSS_PROB_RS:-0.0}
+PACKET_LOSS_PROB_AG=${EW_PACKET_LOSS_PROB_AG:-0.0}
 # Distributed training variables
 LAUNCHER_TYPE=${HL_LAUNCHER_TYPE:-mpirun}
 DATA_DIR=${HL_DATA_DIR_ROOT:-/mnt/weka/algo/red_pajama}

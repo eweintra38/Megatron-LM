@@ -1,0 +1,114 @@
+{
+  "name": "llama2-bf16-g3-erez",
+  "description": "LLaMA2,7B,RP,mbs1,MLM,G3,64x,BF16,TP=2,PP=2,SP=1,DP=16",
+  "resources": {
+    "k8s": {
+      "namespace": "gc",
+      "strict_zone": true,
+      "shared_memory": 10240,
+      "site": "idc",
+      "labels": [
+        "kubernetes.io/hostname!=g2-srv54-c02g-idc",
+        "kubernetes.io/hostname!=g2h-srv120-c02o-idc",
+        "kubernetes.io/hostname!=g2-srv81-c02k-idc",
+        "kubernetes.io/hostname!=g2h-srv32-c02d-idc",
+        "kubernetes.io/hostname!=g2-srv82-c02k-idc",
+        "kubernetes.io/hostname!=g2-srv69-c02i-idc"
+      ],
+      "timeout": 200,
+      "driver": "master"
+    },
+    "hpu": {
+      "model": "gaudi3",
+      "min": 1,
+      "max": 1,
+      "granularity": 0
+    }
+  },
+  "commands": {
+    "env": {
+      "EW_PACKET_LOSS_PROB_RS": "0.0",
+      "EW_PACKET_LOSS_PROB_AG": "0.0",
+      "HL_LAUNCHER_TYPE": "mpirun",
+      "HL_DATA_DIR_ROOT": "/mnt/weka/algo/red_pajama",
+      "HL_DATA_CACHE_DIR": "/software/data/dataset_idx/red_pajama",
+      "HL_TOKENIZER_MODEL": "/software/data/datasets/red_pajama/tokenizer.model",
+      "HL_TRANSFORMER_IMPL": "transformer_engine",
+      "HL_DP": 8,
+      "HL_TP": 1,
+      "HL_PP": 1,
+      "HL_MICRO_BATCH": 1,
+      "HL_EXIT_INTERVAL": 0,
+      "HL_LOG_INTERVAL": 10,
+      "HL_SAVE_INTERVAL": 1500,
+      "HL_CKP_ACT": 0,
+      "HL_LLAMA_VER": 2,
+      "HL_LLAMA_MODEL_SIZE": 7,
+      "HL_DROPOUT": 0,
+      "HL_SEQ_PARALLEL": 1,
+      "HL_VERIFY_CKPT": 1,
+      "HL_USE_FUSED_RMSNORM": 1,
+      "HL_USE_FAST_SOFTMAX": 0,
+      "HL_OPTIMIZER": "fusedadamw",
+      "HL_EVAL_ITERS": 100,
+      "HL_EVAL_INTERVAL": 1000,
+      "HL_SAVE": 0,
+      "HL_USE_TORCH_COMPILE": 1,
+      "HL_USE_LAZY_MODE": 0,
+      "HL_KILL_SWITCH_FILE": "$session_data_kill_switch_path",
+      "HL_HOSTSFILE": "/root/hostsfile",
+      "HL_RESULTS_DIR": "$session_data_logs_path",
+      "HL_CHECKPOINTS_DIR": "$session_data_checkpoints_path",
+      "HL_TENSORBOARD_DIR": "$session_data_tensorboard_path"
+    },
+    "pre_test": [
+      "cat $session_data_session_path/hosts | xargs -I{} echo {} slots=8 >> /root/hostsfile"
+    ],
+    "test": "/software/users/eweintraub/Megatron-LM/examples/llama/pretrain_llama.sh"
+  },
+  "shutdown": {
+    "kill_switch_timeout": 10
+  },
+  "checkpoint": {
+    "id": "latest",
+    "keep_last": 1000,
+    "root_path": "/mnt/weka/llm",
+    "keep_interval": 10,
+    "keep_forever": true
+  },
+  "logs": {
+    "keep_forever": true
+  },
+  "containers": {
+    "base_image": "artifactory-kfs.habana-labs.com/docker-local/1.21.0/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:1.21.0-555",
+    "install": [
+      "pip3 install -r /root/Megatron-LM-fork/megatron/core/requirements.txt",
+      "pip3 install -r /root/Megatron-LM-fork/examples/llama/requirements.txt",
+      "echo '*    soft nofile  unlimited' >> /etc/security/limits.conf",
+      "echo '*    hard nofile  unlimited' >> /etc/security/limits.conf",
+      "echo 'root soft nofile  unlimited' >> /etc/security/limits.conf",
+      "echo 'root hard nofile  unlimited' >> /etc/security/limits.conf"
+    ],
+    "repos": [
+      {
+        "name": "Megatron-LM-fork",
+        "refspec": "d4e76ce4c2ff281d909be71a38f4991a13253956",
+        "remote_type": "github"
+      }
+    ]
+  },
+  "user_data": {
+
+  },
+  "session_data": {
+    "session_id": "2506190948",
+    "exp_path": "/llm/llama2-bf16-g3-compile-v0",
+    "session_path": "/llm/llama2-bf16-g3-compile-v0/2506190948",
+    "checkpoints_path": "/mnt/weka/llm/llama2-bf16-g3-compile-v0/checkpoints",
+    "logs_path": "/llm/llama2-bf16-g3-compile-v0/2506190948/logs",
+    "tensorboard_path": "/llm/llama2-bf16-g3-compile-v0/tensorboard",
+    "kill_switch_path": "/llm/llama2-bf16-g3-compile-v0/2506190948/kill_switch",
+    "docker_image_url": "artifactory-kfs.habana-labs.com/llm-docker-dev-local/llama2-bf16-g3-compile-v0:2506190948",
+    "session_trigger": "https://sw-jenkins-ctrl07.habana-labs.com/job/llm/job/worker/5972/"
+  }
+}
