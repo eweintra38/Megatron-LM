@@ -1,5 +1,5 @@
 {
-  "name": "llama2-bf16-g2-erez14",
+  "name": "llama2-7b-g3-1n-rs0-ag0",
   "description": "LLaMA2,7B,RP,mbs1,MLM,G3,64x,BF16,TP=2,PP=2,SP=1,DP=16",
   "resources": {
     "k8s": {
@@ -27,9 +27,10 @@
   },
   "commands": {
     "env": {
+      "HL_NUM_WORKERS": "8",
       "EW_SIMULATE_GRADIENT_SYNC_ONLY": "1",
-      "EW_PACKET_LOSS_PROB_RS": "0.8",
-      "EW_PACKET_LOSS_PROB_AG": "0.8",
+      "EW_PACKET_LOSS_PROB_RS": "0.0",
+      "EW_PACKET_LOSS_PROB_AG": "0.0",
       "EW_EVAL_TASK": "LAMBADA",
       "HL_LAUNCHER_TYPE": "mpirun",
       "HL_DATA_DIR_ROOT": "/mnt/weka/algo/red_pajama",
