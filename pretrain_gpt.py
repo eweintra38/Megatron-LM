@@ -326,14 +326,21 @@ def train_valid_test_datasets_provider(train_val_test_num_samples):
 
 
 if __name__ == "__main__":
-
-    # Temporary for transition to core datasets
-    train_valid_test_datasets_provider.is_distributed = True
-
-    pretrain(
-        train_valid_test_datasets_provider,
-        model_provider,
-        ModelType.encoder_or_decoder,
-        forward_step,
-        args_defaults={'tokenizer_type': 'GPT2BPETokenizer'},
-    )
+		    
+	if os.getenv('DEBUG', 'false').lower() == 'true':
+	    import debugpy
+	    import time
+	    debug_port = 5678 + eval(os.environ['RANK'])
+	    debugpy.listen(('localhost', debug_port))
+	    time.sleep(10)
+	    # input(f'[{debug_port}] Press Enter to continue...:')
+	
+	# Temporary for transition to core datasets
+	train_valid_test_datasets_provider.is_distributed = True
+	pretrain(
+	    train_valid_test_datasets_provider,
+	    model_provider,
+	    ModelType.encoder_or_decoder,
+	    forward_step,
+	    args_defaults={'tokenizer_type': 'GPT2BPETokenizer'},
+	)

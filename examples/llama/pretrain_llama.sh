@@ -4,6 +4,9 @@
 
 set -ex
 
+# EW:--- for debug only ---
+export DEBUG="false" # "true"
+# --- for debug only ---
 # EW: probabilities for random drops during collectives
 SIMULATE_GRADIENT_SYNC_ONLY=${EW_SIMULATE_GRADIENT_SYNC_ONLY:-1}
 PACKET_LOSS_PROB_RS=${EW_PACKET_LOSS_PROB_RS:-0.0}
