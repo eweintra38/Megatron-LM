@@ -6,8 +6,8 @@ set -ex
 
 # EW: probabilities for random drops during collectives
 SIMULATE_GRADIENT_SYNC_ONLY=${EW_SIMULATE_GRADIENT_SYNC_ONLY:-1}
-PACKET_LOSS_PROB_RS=${EW_PACKET_LOSS_PROB_RS:-0.1}
-PACKET_LOSS_PROB_AG=${EW_PACKET_LOSS_PROB_AG:-0.1}
+PACKET_LOSS_PROB_RS=${EW_PACKET_LOSS_PROB_RS:-0.0}
+PACKET_LOSS_PROB_AG=${EW_PACKET_LOSS_PROB_AG:-0.0}
 export PACKET_LOSS_PROB_RS PACKET_LOSS_PROB_AG
 # Distributed training variables
 LAUNCHER_TYPE=${HL_LAUNCHER_TYPE:-mpirun}
@@ -17,8 +17,8 @@ DATA_FILE_PREFIX=${HL_DATA_FILE_PREFIX:-redpajama}
 TOKENIZER_MODEL=${HL_TOKENIZER_MODEL:-/software/data/datasets/red_pajama/tokenizer.model}
 TRANSFORMER_IMPL=${HL_TRANSFORMER_IMPL:-transformer_engine}
 # Parallelism variables
-NUM_NODES=${HL_NUM_NODES:-1}
-DP=${HL_DP:-8}
+NUM_NODES=${HL_NUM_NODES:-2}
+DP=${HL_DP:-16}
 TP=${HL_TP:-1}
 PP=${HL_PP:-1}
 CP=${HL_CP:-1}
@@ -491,6 +491,9 @@ fi
 
 if [[ "${USE_DISTRIBUTED_OPTIMIZER}" -eq 1 ]]; then
     CMD="${CMD} --use-distributed-optimizer"
+    # enable the RS+AG split and overlap it
+    # CMD="${CMD} --overlap-grad-reduce"
+    # CMD="${CMD} --overlap-param-gather"
 
     if [ -n "$SAVE_DISTRIB_OPTIMIZER_METHOD" ]; then
         CMD="${CMD} --save-distrib-optimizer-method ${SAVE_DISTRIB_OPTIMIZER_METHOD}"

@@ -7,6 +7,11 @@ from enum import Enum
 from typing import Dict, List, Optional
 
 import torch
+
+import os
+import random
+import torch.distributed as dist
+
 from torch.distributed import _coalescing_manager
 
 from megatron.core.rerun_state_machine import get_rerun_state_machine
@@ -212,6 +217,7 @@ class _ParamAndGradBucketGroup:
                     group=self.intra_distributed_optimizer_instance_group,
                     async_op=async_op,
                 )
+
         if async_op:
             self.param_gather_handle = cm
         else:
@@ -222,6 +228,29 @@ class _ParamAndGradBucketGroup:
             # None.
             self.param_gather_handle = None
         self.param_gather_dispatched = True
+
+        # drop_prob = float(os.getenv("PACKET_LOSS_PROB_PARAM", "0.1"))
+        drop_prob = 0.0
+        group = self.intra_distributed_optimizer_instance_group
+        world_size = torch.distributed.get_world_size(group)
+        local_rank = self.intra_distributed_optimizer_instance_rank
+        global_rank = torch.distributed.get_rank()
+        for bucket in self.buckets:
+            shard_size = bucket.param_data.numel() // world_size
+            assert bucket.param_data.numel() % world_size == 0, "Param buffer must align with world size."
+            if not hasattr(bucket, '_packet_loss_prev_param_data'):
+                bucket._packet_loss_prev_param_data = bucket.param_data.clone().detach()
+            for rank in range(world_size):
+                start, end = rank * shard_size, (rank + 1) * shard_size
+                if rank == local_rank or random.random() >= drop_prob:
+                    # Update backup with freshly synchronized data if NOT dropped or local shard
+                    bucket._packet_loss_prev_param_data[start:end].copy_(bucket.param_data[start:end])
+                else:
+                    # Otherwise restore previous shard (simulating a drop)
+                    # print(f"[ParamDropSim][Rank {global_rank}] BEFORE DROP bucket {bucket.bucket_id} from rank {rank}: {bucket.param_data[start:end]}")
+                    bucket.param_data[start:end].copy_(bucket._packet_loss_prev_param_data[start:end])
+                    # print(f"[ParamDropSim][Rank {global_rank}] Dropped param shard from rank {rank} in bucket {bucket.bucket_id}")
+                    # print(f"[ParamDropSim][Rank {global_rank}] AFTER DROP bucket {bucket.bucket_id} from rank {rank}: {bucket.param_data[start:end]}")
 
     def finish_param_sync(self, skip_next_bucket_dispatch: bool = False):
         """
@@ -367,6 +396,33 @@ class _ParamAndGradBucketGroup:
             # None.
             self.grad_reduce_handle = None
 
+        # drop_prob = float(os.getenv("PACKET_LOSS_PROB_GRAD", "0.1"))
+        drop_prob = 0.0
+        group = self.intra_distributed_optimizer_instance_group
+        world_size = torch.distributed.get_world_size(group)
+        local_rank = self.intra_distributed_optimizer_instance_rank
+        global_rank = torch.distributed.get_rank()
+
+        for bucket in self.buckets:
+            shard_size = bucket.grad_data.numel() // world_size
+            assert bucket.grad_data.numel() % world_size == 0, "Gradient buffer size must align with world size."
+
+            if not hasattr(bucket, '_packet_loss_prev_grad_data'):
+                bucket._packet_loss_prev_grad_data = bucket.grad_data.clone().detach()
+
+            for rank in range(world_size):
+                start, end = rank * shard_size, (rank + 1) * shard_size
+
+                if rank == local_rank or random.random() >= drop_prob:
+                    # Update backup with freshly synchronized data if NOT dropped or local shard
+                    bucket._packet_loss_prev_grad_data[start:end].copy_(bucket.grad_data[start:end])
+                else:
+                    # Otherwise restore previous shard (simulating a drop)
+                    # print(f"[Rank {global_rank}] BEFORE DROP bucket {bucket.bucket_id} from rank {rank}: {bucket.grad_data[start:end]}")
+                    bucket.grad_data[start:end].copy_(bucket._packet_loss_prev_grad_data[start:end])
+                    # print(f"[GradDropSim][Rank {global_rank}] Dropped gradient shard from rank {rank} in bucket {bucket.bucket_id}")
+                    # print(f"[Rank {global_rank}] AFTER DROP bucket {bucket.bucket_id} from rank {rank}: {bucket.grad_data[start:end]}")
+
     def finish_grad_sync(self):
         """
         Finishes grad sync (all-reduce or reduce-scatter) communication operations
@@ -392,7 +448,7 @@ class _ParamAndGradBucketGroup:
         )
         self.grad_reduce_handle.wait()
         self.grad_reduce_handle = None
-
+ 
     def register_grad_ready(self, param: torch.nn.Parameter):
         """
         Registers grads for the passed-in param to be "ready" for grad sync.

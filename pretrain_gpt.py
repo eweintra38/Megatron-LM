@@ -2,18 +2,15 @@
 # Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
 """Pretrain GPT."""
 
-import megatron.utils.simulated_allreduce  # override all_reduce with packet-loss simulation
 
 try:
     import habana_frameworks.torch
 except:
     pass
 
+
 import os
 import torch
-
-import torch.distributed as dist
-
 from functools import partial
 from contextlib import nullcontext
 import inspect
