@@ -4,6 +4,10 @@
 
 set -ex
 
+# --- for debug only ---
+export DEBUG="false" # "true"
+# --- for debug only ---
+
 # EW: probabilities for random drops during collectives
 PACKET_LOSS_PROB_PARAM=${EW_PACKET_LOSS_PROB_PARAM:-0.0}
 PACKET_LOSS_PROB_GRAD=${EW_PACKET_LOSS_PROB_GRAD:-0.0}
