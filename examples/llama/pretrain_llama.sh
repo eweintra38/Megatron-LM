@@ -5,10 +5,9 @@
 set -ex
 
 # EW: probabilities for random drops during collectives
-SIMULATE_GRADIENT_SYNC_ONLY=${EW_SIMULATE_GRADIENT_SYNC_ONLY:-1}
-PACKET_LOSS_PROB_RS=${EW_PACKET_LOSS_PROB_RS:-0.0}
-PACKET_LOSS_PROB_AG=${EW_PACKET_LOSS_PROB_AG:-0.0}
-export PACKET_LOSS_PROB_RS PACKET_LOSS_PROB_AG
+PACKET_LOSS_PROB_PARAM=${EW_PACKET_LOSS_PROB_PARAM:-0.0}
+PACKET_LOSS_PROB_GRAD=${EW_PACKET_LOSS_PROB_GRAD:-0.0}
+export PACKET_LOSS_PROB_PARAM PACKET_LOSS_PROB_GRAD
 # Distributed training variables
 LAUNCHER_TYPE=${HL_LAUNCHER_TYPE:-mpirun}
 DATA_DIR=${HL_DATA_DIR_ROOT:-/mnt/weka/algo/red_pajama}
@@ -142,10 +141,17 @@ elif [[ "${LLAMA_VER}" = "2" ]]; then
     # ADAM_EPS=1e-8
     # LR_WARMUP_ITERS=2000
     # ROTARY_BASE=10000
+    ##TOKENIZER_TYPE=${HL_TOKENIZER_TYPE:-GPTSentencePieceTokenizer}
+    ##GLOBAL_BATCH_SIZE=${HL_GBS:-128} # microbatches in the pipeline (computed as `GLOBAL_BATCH / (DP * MICRO_BATCH)`) should be divisible by the PP
+    ##MAX_SEQ_LEN=${HL_SEQ_LEN:-512}
+    ##TRAIN_ITERS=${HL_TRAIN_ITERS:-1000}
+    ##ADAM_EPS=1e-8
+    ##LR_WARMUP_ITERS=100
+    ##ROTARY_BASE=10000
     TOKENIZER_TYPE=${HL_TOKENIZER_TYPE:-GPTSentencePieceTokenizer}
-    GLOBAL_BATCH_SIZE=${HL_GBS:-128} # microbatches in the pipeline (computed as `GLOBAL_BATCH / (DP * MICRO_BATCH)`) should be divisible by the PP
-    MAX_SEQ_LEN=${HL_SEQ_LEN:-512}
-    TRAIN_ITERS=${HL_TRAIN_ITERS:-1000}
+    GLOBAL_BATCH_SIZE=${HL_GBS:-256} # microbatches in the pipeline (computed as `GLOBAL_BATCH / (DP * MICRO_BATCH)`) should be divisible by the PP
+    MAX_SEQ_LEN=${HL_SEQ_LEN:-1024}
+    TRAIN_ITERS=${HL_TRAIN_ITERS:-2000}
     ADAM_EPS=1e-8
     LR_WARMUP_ITERS=100
     ROTARY_BASE=10000
@@ -157,13 +163,20 @@ elif [[ "${LLAMA_VER}" = "2" ]]; then
         # FFN_HIDDEN_SIZE=${HL_FFN_HIDDEN_SIZE:-11008}
         # LR=3e-4
         # MIN_LR=3e-5
-        HIDDEN_SIZE=${HL_HIDDEN_SIZE:-768}
-        NUM_HEADS=${HL_NUM_HEADS:-6}
-        NUM_QUERY_GROUPS=${HL_NUM_QUERY_GROUPS:-1}
-        NUM_LAYERS=${HL_NUM_LAYERS:-6}
-        FFN_HIDDEN_SIZE=${HL_FFN_HIDDEN_SIZE:-3072}
-        LR=3e-4
-        MIN_LR=3e-5
+        ##HIDDEN_SIZE=${HL_HIDDEN_SIZE:-768}
+        ##NUM_HEADS=${HL_NUM_HEADS:-6}
+        ##NUM_QUERY_GROUPS=${HL_NUM_QUERY_GROUPS:-1}
+        ##NUM_LAYERS=${HL_NUM_LAYERS:-6}
+        ##FFN_HIDDEN_SIZE=${HL_FFN_HIDDEN_SIZE:-3072}
+        ##LR=3e-4
+        ##MIN_LR=3e-5
+        HIDDEN_SIZE=${HL_HIDDEN_SIZE:-1536}
+        NUM_HEADS=${HL_NUM_HEADS:-12}
+        NUM_QUERY_GROUPS=${HL_NUM_QUERY_GROUPS:-4}
+        NUM_LAYERS=${HL_NUM_LAYERS:-12}
+        FFN_HIDDEN_SIZE=${HL_FFN_HIDDEN_SIZE:-6144}
+        LR=${HL_LR:-2e-4}
+        MIN_LR=${HL_MIN_LR:-2e-5}
     elif [[ "${LLAMA_MODEL_SIZE}" = "13" ]]; then
         HIDDEN_SIZE=${HL_HIDDEN_SIZE:-5120}
         NUM_HEADS=${HL_NUM_HEADS:-40}
@@ -342,8 +355,8 @@ if [[ "${LAUNCHER_TYPE}" = "mpirun" ]]; then
         CMD="${CMD} --bind-to none"
     fi
     CMD="${CMD} -x PT_HPU_GPU_MIGRATION=${PT_HPU_GPU_MIGRATION}"
-    CMD="${CMD} -x PACKET_LOSS_PROB_RS"
-    CMD="${CMD} -x PACKET_LOSS_PROB_AG"
+    CMD="${CMD} -x PACKET_LOSS_PROB_PARAM"
+    CMD="${CMD} -x PACKET_LOSS_PROB_GRAD"
     CMD="${CMD} -x PT_TE_ENFORCE_BF16_AMAX_REDUCTION=${PT_TE_ENFORCE_BF16_AMAX_REDUCTION}"
     CMD="${CMD} -x PT_TE_LIMIT_GRAPH_SIZE=${PT_TE_LIMIT_GRAPH_SIZE}"
     CMD="${CMD} -x PT_HPU_LAZY_MODE=${USE_LAZY_MODE}"

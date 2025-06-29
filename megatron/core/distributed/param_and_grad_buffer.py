@@ -229,8 +229,8 @@ class _ParamAndGradBucketGroup:
             self.param_gather_handle = None
         self.param_gather_dispatched = True
 
-        # drop_prob = float(os.getenv("PACKET_LOSS_PROB_PARAM", "0.1"))
-        drop_prob = 0.0
+        drop_prob = float(os.getenv("PACKET_LOSS_PROB_PARAM", "0.0"))
+        #drop_prob = 0.3
         group = self.intra_distributed_optimizer_instance_group
         world_size = torch.distributed.get_world_size(group)
         local_rank = self.intra_distributed_optimizer_instance_rank
@@ -396,8 +396,8 @@ class _ParamAndGradBucketGroup:
             # None.
             self.grad_reduce_handle = None
 
-        # drop_prob = float(os.getenv("PACKET_LOSS_PROB_GRAD", "0.1"))
-        drop_prob = 0.0
+        drop_prob = float(os.getenv("PACKET_LOSS_PROB_GRAD", "0.0"))
+        # drop_prob = 0.3
         group = self.intra_distributed_optimizer_instance_group
         world_size = torch.distributed.get_world_size(group)
         local_rank = self.intra_distributed_optimizer_instance_rank
