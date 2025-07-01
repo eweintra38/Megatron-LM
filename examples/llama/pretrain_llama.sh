@@ -9,9 +9,10 @@ export DEBUG="false" # "true"
 # --- for debug only ---
 
 # EW: probabilities for random drops during collectives
+DROP_MODEL=${HL_DROP_MODEL:-uniform} # uniform or ge
 PACKET_LOSS_PROB_PARAM=${EW_PACKET_LOSS_PROB_PARAM:-0.0}
 PACKET_LOSS_PROB_GRAD=${EW_PACKET_LOSS_PROB_GRAD:-0.0}
-export PACKET_LOSS_PROB_PARAM PACKET_LOSS_PROB_GRAD
+export PACKET_LOSS_PROB_PARAM PACKET_LOSS_PROB_GRAD HL_DROP_MODEL
 # Distributed training variables
 LAUNCHER_TYPE=${HL_LAUNCHER_TYPE:-mpirun}
 DATA_DIR=${HL_DATA_DIR_ROOT:-/mnt/weka/algo/red_pajama}
@@ -359,8 +360,9 @@ if [[ "${LAUNCHER_TYPE}" = "mpirun" ]]; then
         CMD="${CMD} --bind-to none"
     fi
     CMD="${CMD} -x PT_HPU_GPU_MIGRATION=${PT_HPU_GPU_MIGRATION}"
-    CMD="${CMD} -x PACKET_LOSS_PROB_PARAM"
-    CMD="${CMD} -x PACKET_LOSS_PROB_GRAD"
+    CMD="${CMD} -x DROP_MODEL=${DROP_MODEL}"
+    CMD="${CMD} -x PACKET_LOSS_PROB_PARAM=${PACKET_LOSS_PROB_PARAM}"
+    CMD="${CMD} -x PACKET_LOSS_PROB_GRAD=${PACKET_LOSS_PROB_GRAD}"
     CMD="${CMD} -x PT_TE_ENFORCE_BF16_AMAX_REDUCTION=${PT_TE_ENFORCE_BF16_AMAX_REDUCTION}"
     CMD="${CMD} -x PT_TE_LIMIT_GRAPH_SIZE=${PT_TE_LIMIT_GRAPH_SIZE}"
     CMD="${CMD} -x PT_HPU_LAZY_MODE=${USE_LAZY_MODE}"
