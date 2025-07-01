@@ -8,4 +8,6 @@ slurm*
 logs
 .vscode
 local/
-.gitmodules
+.gitmodules.env
+.venv
+
