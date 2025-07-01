@@ -29,6 +29,25 @@ else:
     dist_all_gather_func = torch.distributed._all_gather_base
     dist_reduce_scatter_func = torch.distributed._reduce_scatter_base
 
+# ─── 1. Define Gilbert-Elliott ───────────────────────────────────────────────────
+class GilbertElliott:
+    def __init__(self, p: float, r: float, pg: float, pb: float):
+        self.p = p      # G→B transition prob
+        self.r = r      # B→G transition prob
+        self.pg = pg    # drop-prob in Good state
+        self.pb = pb    # drop-prob in Bad state
+        self.state = 'G'
+
+    def should_drop(self) -> bool:
+        # state transition
+        if self.state == 'G':
+            if random.random() < self.p:
+                self.state = 'B'
+        else:
+            if random.random() < self.r:
+                self.state = 'G'
+        # now sample drop in current state
+        return random.random() < (self.pg if self.state == 'G' else self.pb)
 
 class BufferType(Enum):
     """
@@ -242,7 +261,9 @@ class _ParamAndGradBucketGroup:
                 bucket._packet_loss_prev_param_data = bucket.param_data.clone().detach()
             for rank in range(world_size):
                 start, end = rank * shard_size, (rank + 1) * shard_size
-                if rank == local_rank or random.random() >= drop_prob:
+                # if rank == local_rank or random.random() >= drop_prob:
+                # keep this shard if it's local, or GE decides NOT to drop
+                if rank == local_rank or not self._param_loss_model.should_drop():
                     # Update backup with freshly synchronized data if NOT dropped or local shard
                     bucket._packet_loss_prev_param_data[start:end].copy_(bucket.param_data[start:end])
                 else:
@@ -413,7 +434,9 @@ class _ParamAndGradBucketGroup:
             for rank in range(world_size):
                 start, end = rank * shard_size, (rank + 1) * shard_size
 
-                if rank == local_rank or random.random() >= drop_prob:
+                #if rank == local_rank or random.random() >= drop_prob:
+                # keep this shard if it's local, or GE decides NOT to drop
+                if rank == local_rank or not self._grad_loss_model.should_drop():
                     # Update backup with freshly synchronized data if NOT dropped or local shard
                     bucket._packet_loss_prev_grad_data[start:end].copy_(bucket.grad_data[start:end])
                 else:
@@ -527,6 +550,14 @@ class _ParamAndGradBuffer:
         self.buckets = []
         self.param_to_bucket = {}  # Param -> bucket mapping.
         self.param_index_map = {}  # Param -> location in buffer mapping (used in dist. optimizer).
+
+        # ─── 2. Instantiate two GE models ────────────────────────────────
+        p  = float(os.getenv("GE_P",  "0.01"))   # G→B
+        r  = float(os.getenv("GE_R",  "0.10"))   # B→G
+        pg = float(os.getenv("GE_PG", "0.01"))   # drop in Good
+        pb = float(os.getenv("GE_PB", "0.70"))   # drop in Bad
+        self._param_loss_model = GilbertElliott(p, r, pg, pb)
+        self._grad_loss_model  = GilbertElliott(p, r, pg, pb)
 
         def _pad(number_to_be_padded: int, divisor: int) -> int:
             return int(math.ceil(number_to_be_padded / divisor) * divisor)
