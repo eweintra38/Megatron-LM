@@ -1,5 +1,5 @@
 {
-  "name": "llama2-g3-4n-erez-d0-2-1",
+  "name": "llama2-g3-4n-erez-d0-test",
   "description": "LLaMA2,7B,RP,mbs1,MLM,G3,64x,BF16,TP=2,PP=2,SP=1,DP=16",
   "resources": {
     "k8s": {
@@ -20,23 +20,23 @@
     },
     "hpu": {
       "model": "gaudi3",
-      "min": 4,
-      "max": 4,
+      "min": 1,
+      "max": 1,
       "granularity": 0
     }
   },
   "commands": {
     "env": {
-      "EW_PACKET_LOSS_PROB_PARAM": "0.2",
-      "EW_PACKET_LOSS_PROB_GRAD": "0.2",
+      "EW_PACKET_LOSS_PROB_PARAM": "0.7",
+      "EW_PACKET_LOSS_PROB_GRAD": "0.7",
       "EW_EVAL_TASK": "LAMBADA",
       "HL_LAUNCHER_TYPE": "mpirun",
       "HL_DATA_DIR_ROOT": "/mnt/weka/algo/red_pajama",
       "HL_DATA_CACHE_DIR": "/software/data/dataset_idx/red_pajama",
       "HL_TOKENIZER_MODEL": "/software/data/datasets/red_pajama/tokenizer.model",
       "HL_TRANSFORMER_IMPL": "transformer_engine",
-      "HL_NUM_NODES": 4,
-      "HL_DP": 32,
+      "HL_NUM_NODES": 1,
+      "HL_DP": 8,
       "HL_TP": 1,
       "HL_PP": 1,
       "HL_HIDDEN_SIZE": 2048,

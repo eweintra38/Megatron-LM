@@ -1,5 +1,5 @@
 {
-  "name": "llama2-g3-4n-erez-d0-2-1",
+  "name": "llama2-g3-4n-erez-d0-2-2",
   "description": "LLaMA2,7B,RP,mbs1,MLM,G3,64x,BF16,TP=2,PP=2,SP=1,DP=16",
   "resources": {
     "k8s": {
